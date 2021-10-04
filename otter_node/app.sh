@@ -215,6 +215,8 @@ function start_mysql() {
     MYSQL_USER=otter
     MYSQL_DATABASE=otter
     if [ -z "$(ls -A /var/lib/mysql)" ]; then
+        cmd="sed -i -e  '1a log-bin=mysql-bin\nbinlog-format=ROW\ndefault-character-set=utf8' /etc/my.cnf"        
+        eval $cmd   
         mysql_install_db --user=mysql --datadir=/var/lib/mysql 1>>/tmp/start.log 2>&1
         # These statements _must_ be on individual lines, and _must_ end with
         # semicolons (no line breaks or comments are permitted).

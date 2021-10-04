@@ -1,0 +1,71 @@
+version: "3"
+services:
+  otter_manager:
+    image: ${DOCKER_REGISTRY-}otter_manager
+    build:
+      context: .
+      dockerfile: otter_manager/Dockerfile
+    restart: always
+    container_name: otter_manager
+    hostname: otter_manager
+    networks:
+      otter:
+        ipv4_address: 10.21.0.10
+    ports:
+      - 8080:8080    
+    environment:
+      ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=10.21.0.10:2888:3888 server.2=10.21.0.11:2888:3888 server.3=10.21.0.12:2888:3888
+    extra_hosts:
+      - "otter_manager:10.21.0.10"
+      - "node01:10.21.0.11"      
+      - "node02:10.21.0.12"
+
+  node01:
+    image: ${DOCKER_REGISTRY-}otter_node
+    build:
+      context: .
+      dockerfile: otter_node/Dockerfile
+    container_name: node01
+    hostname: node01
+    networks:
+      otter:
+        ipv4_address: 10.21.0.11
+    environment:
+      ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=10.21.0.10:2888:3888 server.2=10.21.0.11:2888:3888 server.3=10.21.0.12:2888:3888
+    extra_hosts:
+      - "otter_manager:10.21.0.10"
+      - "node01:10.21.0.11"      
+      - "node02:10.21.0.12"    
+
+  node02:
+    image: ${DOCKER_REGISTRY-}otter_node
+    build:
+      context: .
+      dockerfile: otter_node/Dockerfile
+    restart: always
+    container_name: node02
+    hostname: node02
+    networks:
+      otter:
+        ipv4_address: 10.21.0.12
+    environment:
+      ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=10.21.0.10:2888:3888 server.2=10.21.0.11:2888:3888 server.3=10.21.0.12:2888:3888
+    extra_hosts:
+      - "otter_manager:10.21.0.10"
+      - "node01:10.21.0.11"      
+      - "node02:10.21.0.12"
+
+
+networks:
+  otter:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.21.0.0/16
+          gateway: 10.21.0.1

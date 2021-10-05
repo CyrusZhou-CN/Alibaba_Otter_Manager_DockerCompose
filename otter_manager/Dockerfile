@@ -1,7 +1,7 @@
 FROM canal/otter-osbase:v1
 
 MAINTAINER agapple (jianghang115@gmail.com)
-EXPOSE 8080 8081 2181 2088 2089 2090
+EXPOSE 8080 8081 2181 8018 2088 2089 2090
 # install otter
 COPY ./image/ /tmp/docker/
 COPY ./otter_manager/app.sh /home/admin/app.sh
@@ -21,12 +21,15 @@ RUN \
     /bin/rm -f /tmp/docker/node.deployer-*.tar.gz && \
     /bin/rm -f /tmp/docker/node.deployer-*.tar.gz && \
     /bin/rm -f /tmp/docker/manager.deployer-*.tar.gz && \
-    mkdir -p home/admin/manager/logs  && \    
-    mkdir -p home/admin/node/logs  && \
-    mkdir -p home/admin/zkData  && \
+    mkdir -p /home/admin/manager/logs  && \    
+    mkdir -p /home/admin/node/logs  && \
+    mkdir -p /home/admin/zkData  && \
     chmod +x /home/admin/*.sh  && \
-    chmod +x /home/admin/bin/*.sh  && \
-    chown admin: -R /home/admin && \    
+    chmod +x /home/admin/bin/*.sh  && \    
+    rm -rf /home/admin/zookeeper-3.4.13 && \
+    tar -xzvf /tmp/docker/apache-zookeeper-*-bin.tar.gz -C /home/admin/ && \
+    mv /home/admin/apache-zookeeper-3.7.0-bin /home/admin/zookeeper-3.7.0 && \
+    chown admin: -R /home/admin && \ 
     echo "otter.zookeeper.cluster.default = 127.0.0.1:2181" >> "/home/admin/node/conf/otter.properties" && \
     yum clean all && \
     true

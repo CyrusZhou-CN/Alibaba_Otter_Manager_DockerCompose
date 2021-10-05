@@ -19,12 +19,15 @@ RUN \
     tar -xzvf /tmp/docker/node.deployer-*.tar.gz -C /home/admin/node && \
     /bin/rm -f /tmp/docker/node.deployer-*.tar.gz && \
     /bin/rm -f /tmp/docker/manager.deployer-*.tar.gz && \
-    mkdir -p home/admin/node/logs  && \
-    mkdir -p home/admin/zkData  && \
+    mkdir -p /home/admin/node/logs  && \
+    mkdir -p /home/admin/zkData  && \
     chmod +x /home/admin/*.sh  && \
-    chmod +x /home/admin/bin/*.sh  && \
+    chmod +x /home/admin/bin/*.sh  && \    
+    yum clean all && \     
+    rm -rf /home/admin/zookeeper-3.4.13 && \
+    tar -xzvf /tmp/docker/apache-zookeeper-3.7.0-bin.tar.gz -C /home/admin/ && \
+    mv /home/admin/apache-zookeeper-3.7.0-bin /home/admin/zookeeper-3.7.0 && \
     chown admin: -R /home/admin && \
-    yum clean all && \
     echo "otter.zookeeper.cluster.default = 127.0.0.1:2181" >> "/home/admin/node/conf/otter.properties" && \
     true
 

@@ -21,6 +21,15 @@ fi
 if [ -z "${OTTER_MANAGER_MYSQL}" ]; then
     OTTER_MANAGER_MYSQL="127.0.0.1:3306"
 fi
+if [ -z "${MYSQL_ROOT_PASSWORD}" ]; then
+    MYSQL_ROOT_PASSWORD="otter"
+fi
+if [ -z "${MYSQL_USER}" ]; then
+    MYSQL_USER="otter"
+fi
+if [ -z "${MYSQL_DATABASE}" ]; then
+    MYSQL_DATABASE="otter"
+fi
 
 # default zookeeper config
 ZOO_DIR=/home/admin/zookeeper-3.4.13
@@ -211,9 +220,7 @@ function stop_node() {
 function start_mysql() {
     echo "start mysql ..."
     # start mysql
-    MYSQL_ROOT_PASSWORD=otter
-    MYSQL_USER=otter
-    MYSQL_DATABASE=otter
+
     if [ -z "$(ls -A /var/lib/mysql)" ]; then
         cmd="sed -i -e  '1a log-bin=mysql-bin\nbinlog-format=ROW\ndefault-character-set=utf8' /etc/my.cnf"        
         eval $cmd   
@@ -222,12 +229,12 @@ function start_mysql() {
         # semicolons (no line breaks or comments are permitted).
         # TODO proper SQL escaping on ALL the things D:
         TEMP_FILE='/tmp/init.sql'
-        echo "update mysql.user set password=password('${MYSQL_ROOT_PASSWORD}') where user='root';" >> $TEMP_FILE
         echo "grant all privileges on *.* to 'root'@'%' WITH GRANT OPTION ;" >> $TEMP_FILE
         echo "create database if not exists $MYSQL_DATABASE ;" >> $TEMP_FILE
         echo "create user $MYSQL_USER identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE
         echo "grant all privileges on $MYSQL_DATABASE.* to '$MYSQL_USER'@'%' identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE
-        echo "grant all privileges on $MYSQL_DATABASE.* to '$MYSQL_USER'@'localhost' identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE
+        echo "grant all privileges on $MYSQL_DATABASE.* to '$MYSQL_USER'@'localhost' identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE        
+        echo "update mysql.user set password=password('${MYSQL_ROOT_PASSWORD}') where user='root';" >> $TEMP_FILE
         echo "flush privileges;" >> $TEMP_FILE
         service mysqld start
         mysql -h127.0.0.1 -uroot -e "source $TEMP_FILE" 1>>/tmp/start.log 2>&1

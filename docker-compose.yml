@@ -12,7 +12,8 @@ services:
       otter:
         ipv4_address: 10.21.0.10
     ports:
-      - 8080:8080    
+      - 8080:8080
+      - 33061:3306 
     environment:
       ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
       ZOO_MY_ID: 1
@@ -32,6 +33,8 @@ services:
     networks:
       otter:
         ipv4_address: 10.21.0.11
+    ports:
+      - 33062:3306 
     environment:
       ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
       ZOO_MY_ID: 2
@@ -52,6 +55,8 @@ services:
     networks:
       otter:
         ipv4_address: 10.21.0.12
+    ports:
+      - 33063:3306 
     environment:
       ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
       ZOO_MY_ID: 3

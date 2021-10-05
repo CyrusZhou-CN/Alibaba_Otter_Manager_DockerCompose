@@ -36,16 +36,15 @@ fi
 ZOO_DIR=/home/admin/zookeeper-3.4.13
 ZOO_CONF_DIR=$ZOO_DIR/conf
 ZOO_DATA_DIR=/home/admin/zkData 
-ZOO_DATA_LOG_DIR=$ZOO_DIR/datalog 
+ZOO_DATA_LOG_DIR=$ZOO_DATA_DIR/datalog 
 ZOO_LOG_DIR=$ZOO_DIR/logs 
-ZOO_TICK_TIME=2000 
-ZOO_INIT_LIMIT=5 
-ZOO_SYNC_LIMIT=2 
+ZOO_TICK_TIME=10000 
+ZOO_INIT_LIMIT=10 
+ZOO_SYNC_LIMIT=5
 ZOO_AUTOPURGE_PURGEINTERVAL=0 
 ZOO_AUTOPURGE_SNAPRETAINCOUNT=3 
 ZOO_MAX_CLIENT_CNXNS=60 
 ZOO_STANDALONE_ENABLED=true 
-ZOO_ADMINSERVER_ENABLED=true
 
 # waitterm
 #   wait TERM/INT signal.
@@ -112,7 +111,7 @@ function checkStart() {
             totalstr="${space48}${percentstr}${space48}"
             leadingstr="${totalstr:0:$i+1}"
             trailingstr="${totalstr:$i+1}"
-            #打印进度
+            #打印进度,#docker中进度条不刷新
             printf "\r\e[30;47m${leadingstr}\e[37;40m${trailingstr}\e[0m"
             let i=$i+1
             str="${str}="
@@ -133,15 +132,8 @@ function checkStart() {
 function start_zookeeper() {
     echo "start zookeeper ..."
     # start zookeeper
-    # rm -f /home/admin/zkData/myid
-    # sed -i '/^server\..*/d' /home/admin/zookeeper-3.4.13/conf/zoo.cfg
-    # echo "server.1=10.21.0.11:2888:3888" >> /home/admin/zookeeper-3.4.13/conf/zoo.cfg
-    # echo "server.2=10.21.0.12:2888:3888" >> /home/admin/zookeeper-3.4.13/conf/zoo.cfg
-    # echo "server.3=10.21.0.13:2888:3888" >> /home/admin/zookeeper-3.4.13/conf/zoo.cfg
-    # echo "${myid}" >> /home/admin/zkData/myid
-
     # Generate the config
-    rm -f /home/admin/zkData/myid
+    rm -f $ZOO_DATA_DIR/myid
     rm -f $ZOO_CONF_DIR/zoo.cfg
     if [[ ! -f "$ZOO_CONF_DIR/zoo.cfg" ]]; then
         CONFIG="$ZOO_CONF_DIR/zoo.cfg"
@@ -152,13 +144,13 @@ function start_zookeeper() {
             echo "tickTime=$ZOO_TICK_TIME"
             echo "initLimit=$ZOO_INIT_LIMIT"
             echo "syncLimit=$ZOO_SYNC_LIMIT"
+            echo "clientPortAddress=0.0.0.0"
             echo "clientPort=2181"
             echo "quorumListenOnAllIPs=true"
             echo "autopurge.snapRetainCount=$ZOO_AUTOPURGE_SNAPRETAINCOUNT"
             echo "autopurge.purgeInterval=$ZOO_AUTOPURGE_PURGEINTERVAL"
             echo "maxClientCnxns=$ZOO_MAX_CLIENT_CNXNS"
             echo "standaloneEnabled=$ZOO_STANDALONE_ENABLED"
-            echo "admin.enableServer=$ZOO_ADMINSERVER_ENABLED"
         } >> "$CONFIG"
         if [[ -z $ZOO_SERVERS ]]; then
             ZOO_SERVERS="server.1=localhost:2888:3888"
@@ -181,7 +173,9 @@ function start_zookeeper() {
     if [[ ! -f "$ZOO_DATA_DIR/myid" ]]; then
         echo "${ZOO_MY_ID:-1}" > "$ZOO_DATA_DIR/myid"
     fi
-    su admin -c "mkdir -p /home/admin/zkData; cd /home/admin/zkData; /home/admin/zookeeper-3.4.13/bin/zkServer.sh start >> /home/admin/zkData/zookeeper.log 2>&1"
+    
+    cmd="su admin -c 'mkdir -p $ZOO_DATA_DIR;mkdir -p $ZOO_LOG_DIR; cd $ZOO_DATA_DIR; $ZOO_DIR/bin/zkServer.sh start >> $ZOO_DATA_DIR/zookeeper.log 2>&1'"
+    eval $cmd
     #sleep 1
     #check start
     checkStart "zookeeper" "echo stat | nc 127.0.0.1 2181 | grep -c Outstanding" 120
@@ -190,7 +184,8 @@ function start_zookeeper() {
 function stop_zookeeper() {
     # stop zookeeper
     echo "stop zookeeper"
-    su admin -c 'mkdir -p /home/admin/zkData; cd /home/admin/zkData; /home/admin/zookeeper-3.4.13/bin/zkServer.sh stop >> /home/admin/zkData/zookeeper.log 2>&1'
+    cmd="su admin -c 'mkdir -p $ZOO_DATA_DIR; cd $ZOO_DATA_DIR; $ZOO_DIR/bin/zkServer.sh stop >> $ZOO_DATA_DIR/zookeeper.log 2>&1'"
+    eval $cmd
     echo "stop zookeeper successful ..."
 }
 
@@ -251,9 +246,7 @@ function stop_node() {
 function start_mysql() {
     echo "start mysql ..."
     # start mysql
-    MYSQL_ROOT_PASSWORD=otter
-    MYSQL_USER=otter
-    MYSQL_DATABASE=otter
+
     if [ -z "$(ls -A /var/lib/mysql)" ]; then
         cmd="sed -i -e  '1a log-bin=mysql-bin\nbinlog-format=ROW\ndefault-character-set=utf8' /etc/my.cnf"        
         eval $cmd   
@@ -279,6 +272,7 @@ function start_mysql() {
         # eval $cmd
         # cmd="sed -i -e 's/#OTTER_NODE_HOST#/127.0.0.1/' /home/admin/bin/ddl.sql"
         # eval $cmd
+
         cmd="mysql -h127.0.0.1 -u$MYSQL_USER -p$MYSQL_USER_PASSWORD $MYSQL_DATABASE -e 'source /home/admin/bin/ddl.sql' 1>>/tmp/start.log 2>&1"
         eval $cmd
         /bin/rm -f /home/admin/bin/ddl.sql

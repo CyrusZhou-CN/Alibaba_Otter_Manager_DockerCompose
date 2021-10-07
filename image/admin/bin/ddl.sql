@@ -2,6 +2,9 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/ `otter` /*!40100 DEFAULT CHARACTER SET 
 
 USE `otter`;
 
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+/*修复 ERROR 1067 (42000) at line 5 in file: '/home/admin/bin/ddl.sql': Invalid default value for 'GMT_CREATE'*/
 CREATE TABLE `ALARM_RULE` (
   `ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `MONITOR_NAME` varchar(1024) DEFAULT NULL,
@@ -298,6 +301,5 @@ insert into USER(ID,USERNAME,PASSWORD,AUTHORIZETYPE,DEPARTMENT,REALNAME,GMT_CREA
 insert into USER(ID,USERNAME,PASSWORD,AUTHORIZETYPE,DEPARTMENT,REALNAME,GMT_CREATE,GMT_MODIFIED) values(null,'guest','471e02a154a2121dc577','OPERATOR','guest','guest',now(),now());
 
 replace into AUTOKEEPER_CLUSTER(ID,CLUSTER_NAME,SERVER_LIST,DESCRIPTION,GMT_CREATE,GMT_MODIFIED) values(1,'default','["otter_manager:2181","node01:2181","node02:2181"]',NULL,now(),now());
-replace into NODE(ID,NAME,IP,PORT,DESCRIPTION,PARAMETERS,GMT_CREATE,GMT_MODIFIED) values(1,'node00','10.21.0.10',2088,NULL,'{"downloadPort":2089,"mbeanPort":2090,"useExternalIp":false,"zkCluster":{"clusterName":"default","id":1}}', now(), now());
 replace into NODE(ID,NAME,IP,PORT,DESCRIPTION,PARAMETERS,GMT_CREATE,GMT_MODIFIED) values(2,'node01','10.21.0.11',2088,NULL,'{"downloadPort":2089,"mbeanPort":2090,"useExternalIp":false,"zkCluster":{"clusterName":"default","id":1}}', now(), now());
 replace into NODE(ID,NAME,IP,PORT,DESCRIPTION,PARAMETERS,GMT_CREATE,GMT_MODIFIED) values(3,'node02','10.21.0.12',2088,NULL,'{"downloadPort":2089,"mbeanPort":2090,"useExternalIp":false,"zkCluster":{"clusterName":"default","id":1}}', now(), now());

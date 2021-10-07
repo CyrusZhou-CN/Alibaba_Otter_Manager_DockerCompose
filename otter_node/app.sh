@@ -215,43 +215,49 @@ function stop_node() {
     echo "stop node successful ..."
 }
 
-function start_mysql() {
-    echo "start mysql ..."
+function start_mysql() {    
     # start mysql
-
     if [ -z "$(ls -A /var/lib/mysql)" ]; then
-        cmd="sed -i -e  '1a log-bin=mysql-bin\nbinlog-format=ROW\ndefault-character-set=utf8\nserver-id=${ZOO_MY_ID:-1}' /etc/my.cnf"        
-        eval $cmd   
-        mysql_install_db --user=mysql --datadir=/var/lib/mysql 1>>/tmp/start.log 2>&1
-        # These statements _must_ be on individual lines, and _must_ end with
-        # semicolons (no line breaks or comments are permitted).
-        # TODO proper SQL escaping on ALL the things D:
+        echo "start modify mysql password ..."
+        cmd="sed -i -e  '2a skip-grant-tables' /etc/my.cnf"
+        eval $cmd
+        cmd="sed -i -e  '2a server-id=${ZOO_MY_ID:-1}' /etc/my.cnf"
+        eval $cmd
+        /usr/sbin/mysqld --user=mysql --datadir=/var/lib/mysql --initialize 1>>/tmp/start.log 2>&1
+        service mysqld start
+        echo "PASSWORD:${MYSQL_ROOT_PASSWORD}"
+        mysql -e "UPDATE mysql.user SET authentication_string = PASSWORD('${MYSQL_ROOT_PASSWORD}') where user='root';flush privileges;"
+        cmd="sed -i '/skip-grant-tables/d' /etc/my.cnf"
+        eval $cmd
+        echo "start mysql initialize ..."
         TEMP_FILE='/tmp/init.sql'
-        echo "grant all privileges on *.* to 'root'@'%' WITH GRANT OPTION ;" >> $TEMP_FILE
+        echo "grant all privileges on *.* to 'root'@'%' identified by '$MYSQL_ROOT_PASSWORD';" >> $TEMP_FILE
+        echo "grant all privileges on *.* to 'root' WITH GRANT OPTION ;" >> $TEMP_FILE
         echo "create database if not exists $MYSQL_DATABASE ;" >> $TEMP_FILE
         echo "create user $MYSQL_USER identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE
         echo "grant all privileges on $MYSQL_DATABASE.* to '$MYSQL_USER'@'%' identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE
-        echo "grant all privileges on $MYSQL_DATABASE.* to '$MYSQL_USER'@'localhost' identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE        
-        echo "update mysql.user set password=password('${MYSQL_ROOT_PASSWORD}') where user='root';" >> $TEMP_FILE
+        echo "grant all privileges on $MYSQL_DATABASE.* to '$MYSQL_USER'@'localhost' identified by '$MYSQL_USER_PASSWORD' ;" >> $TEMP_FILE
         echo "flush privileges;" >> $TEMP_FILE
+        echo "start mysql ..."
+        mysqladmin -uroot -p${MYSQL_ROOT_PASSWORD} shutdown
         service mysqld start
-        mysql -h127.0.0.1 -uroot -e "source $TEMP_FILE" 1>>/tmp/start.log 2>&1
-        service mysqld restart
-
-        checkStart "mysql" "echo 'show status' | mysql -s -P3306 -uroot -p$MYSQL_ROOT_PASSWORD | grep -c Uptime" 120
-
+        MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql --connect-expired-password -h127.0.0.1 -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';flush privileges;"
+        MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot -e "source $TEMP_FILE" 1>>/tmp/start.log 2>&1
+        checkStart "mysql" "echo 'show status' | MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -s -P3306 -uroot | grep -c Uptime" 120
+        # otter 基础配置        
+        cmd="MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -u$MYSQL_USER $MYSQL_DATABASE -e 'source /home/admin/bin/ddl.sql' 1>>/tmp/start.log 2>&1"
         # cmd="sed -i -e 's/#OTTER_MY_ZK#/127.0.0.1:2181/' /home/admin/bin/ddl.sql"
         # eval $cmd
         # cmd="sed -i -e 's/#OTTER_NODE_HOST#/127.0.0.1/' /home/admin/bin/ddl.sql"
         # eval $cmd
-        cmd="mysql -h127.0.0.1 -u$MYSQL_USER -p$MYSQL_USER_PASSWORD $MYSQL_DATABASE -e 'source /home/admin/bin/ddl.sql' 1>>/tmp/start.log 2>&1"
         eval $cmd
         /bin/rm -f /home/admin/bin/ddl.sql
     else
+        echo "start mysql ..."
         chown -R mysql:mysql /var/lib/mysql
         service mysqld start
         #check start
-        checkStart "mysql" "echo 'show status' | mysql -b -s -P3306 -uroot -p$MYSQL_ROOT_PASSWORD | grep -c Uptime" 120
+        checkStart "mysql" "echo 'show status' | MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -b -s -P3306 -uroot | grep -c Uptime" 120
     fi
 }
 

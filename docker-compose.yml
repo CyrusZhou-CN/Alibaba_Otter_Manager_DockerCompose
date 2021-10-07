@@ -12,12 +12,13 @@ services:
       otter:
         ipv4_address: 10.21.0.10
     ports:
-      - 8080:8080
+      - 8080:8080 
+      - 8018:8018 #zookeeper ui
       - 33061:3306 
     environment:
-      ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
+      ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=10.21.0.10:2888:3888 server.2=10.21.0.11:2888:3888 server.3=10.21.0.12:2888:3888
+      ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
     extra_hosts:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      
@@ -36,13 +37,15 @@ services:
     ports:
       - 33062:3306 
     environment:
-      ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
+      ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 2
-      ZOO_SERVERS: server.1=10.21.0.10:2888:3888 server.2=10.21.0.11:2888:3888 server.3=10.21.0.12:2888:3888
+      ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
     extra_hosts:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      
-      - "node02:10.21.0.12"    
+      - "node02:10.21.0.12" 
+    depends_on:
+      - otter_manager
 
   node02:
     image: ${DOCKER_REGISTRY-}otter_node
@@ -58,14 +61,15 @@ services:
     ports:
       - 33063:3306 
     environment:
-      ZOO_CLUSTER: 10.21.0.10:2181,10.21.0.11:2181,10.21.0.12:2181
+      ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 3
-      ZOO_SERVERS: server.1=10.21.0.10:2888:3888 server.2=10.21.0.11:2888:3888 server.3=10.21.0.12:2888:3888
+      ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
     extra_hosts:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      
       - "node02:10.21.0.12"
-
+    depends_on:
+      - node01
 
 networks:
   otter:

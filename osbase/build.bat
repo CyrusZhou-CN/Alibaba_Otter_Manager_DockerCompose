@@ -1,0 +1,1 @@
+docker build -t lsqtzj/otter-osbase:v1.0 .

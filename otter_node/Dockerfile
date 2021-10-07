@@ -1,15 +1,12 @@
-FROM canal/otter-osbase:v1
+FROM lsqtzj/otter-osbase:v1.0
 
-MAINTAINER agapple (jianghang115@gmail.com)
-EXPOSE 2181 2088 2089 2090
+EXPOSE 2181 2088 2089 2090 3306
 # install otter
 COPY ./image/ /tmp/docker/
 COPY ./otter_node/app.sh /home/admin/app.sh
-COPY ./otter_node/aria2c /bin/aria2c
+COPY ./otter_node/my.cnf /etc/my.cnf
 
-RUN \    
-    /bin/cp -rf /tmp/docker/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo && \
-    yum install  -y gnutls-devel c-ares && \
+RUN \
     cp -R /tmp/docker/alidata /alidata && \
     chmod +x /alidata/bin/* && \
     mkdir -p /home/admin && \
@@ -18,13 +15,14 @@ RUN \
     mkdir -p /home/admin/node && \
     tar -xzvf /tmp/docker/node.deployer-*.tar.gz -C /home/admin/node && \
     /bin/rm -f /tmp/docker/node.deployer-*.tar.gz && \
+    /bin/rm -f /tmp/docker/node.deployer-*.tar.gz && \
     /bin/rm -f /tmp/docker/manager.deployer-*.tar.gz && \
-    mkdir -p home/admin/node/logs  && \
-    mkdir -p home/admin/zkData  && \
+    mkdir -p /home/admin/node/logs  && \
+    mkdir -p /home/admin/zkData  && \
     chmod +x /home/admin/*.sh  && \
     chmod +x /home/admin/bin/*.sh  && \
-    chown admin: -R /home/admin && \
-    yum clean all && \
+    chown admin: -R /home/admin && \ 
+    yum clean all && \    
     echo "otter.zookeeper.cluster.default = 127.0.0.1:2181" >> "/home/admin/node/conf/otter.properties" && \
     true
 

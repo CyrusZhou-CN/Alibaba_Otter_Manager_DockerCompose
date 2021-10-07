@@ -43,7 +43,9 @@ services:
     extra_hosts:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      
-      - "node02:10.21.0.12"    
+      - "node02:10.21.0.12" 
+    depends_on:
+      - otter_manager
 
   node02:
     image: ${DOCKER_REGISTRY-}otter_node
@@ -66,7 +68,8 @@ services:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      
       - "node02:10.21.0.12"
-
+    depends_on:
+      - node01
 
 networks:
   otter:

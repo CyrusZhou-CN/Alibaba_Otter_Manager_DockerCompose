@@ -16,6 +16,7 @@ services:
       - 8018:8018 #zookeeper ui
       - 33061:3306 
     environment:
+      TZ: Europe/Rome #Asia/Shanghai 时区
       ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
@@ -29,6 +30,7 @@ services:
     build:
       context: .
       dockerfile: otter_node/Dockerfile
+    restart: always
     container_name: node01
     hostname: node01
     networks:
@@ -37,6 +39,7 @@ services:
     ports:
       - 33062:3306 
     environment:
+      TZ: Europe/Rome #Asia/Shanghai 时区
       ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 2
       ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
@@ -61,6 +64,7 @@ services:
     ports:
       - 33063:3306 
     environment:
+      TZ: Europe/Rome #Asia/Shanghai 时区
       ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 3
       ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888

@@ -245,13 +245,17 @@ function start_mysql() {
         MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot -e "source $TEMP_FILE" 1>>/tmp/start.log 2>&1
         checkStart "mysql" "echo 'show status' | MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -s -P3306 -uroot | grep -c Uptime" 120
         # otter 基础配置        
-        cmd="MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -u$MYSQL_USER $MYSQL_DATABASE -e 'source /home/admin/bin/ddl.sql' 1>>/tmp/start.log 2>&1"
+        cmd="MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot $MYSQL_DATABASE -e 'source /home/admin/bin/ddl.sql' 1>>/tmp/start.log 2>&1"
         # cmd="sed -i -e 's/#OTTER_MY_ZK#/127.0.0.1:2181/' /home/admin/bin/ddl.sql"
         # eval $cmd
         # cmd="sed -i -e 's/#OTTER_NODE_HOST#/127.0.0.1/' /home/admin/bin/ddl.sql"
         # eval $cmd
         eval $cmd
+        # 双A同步，执行了初始化sql，Table 'retl.retl_mark' doesn't exist 问题
+        cmd="MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot $MYSQL_DATABASE -e 'source /home/admin/bin/otter-system-ddl-mysql.sql' 1>>/tmp/start.log 2>&1"
+        eval $cmd
         /bin/rm -f /home/admin/bin/ddl.sql
+        /bin/rm -f /home/admin/bin/otter-system-ddl-mysql.sql
     else
         echo "start mysql ..."
         chown -R mysql:mysql /var/lib/mysql

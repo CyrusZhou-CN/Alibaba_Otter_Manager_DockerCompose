@@ -1,4 +1,4 @@
-FROM canal/otter-osbase:v1
+FROM canal/otter-osbase
 
 
 COPY ./aria2c /bin/aria2c

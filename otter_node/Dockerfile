@@ -1,4 +1,4 @@
-FROM lsqtzj/otter-osbase:v1.0
+FROM lsqtzj/otter-osbase
 
 EXPOSE 2181 2088 2089 2090 3306
 # install otter

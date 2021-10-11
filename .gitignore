@@ -1,5 +1,5 @@
 .svn/
-./vscode
+.vscode/
 target/
 test-output/
 *.class

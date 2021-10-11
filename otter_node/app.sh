@@ -217,11 +217,12 @@ function stop_node() {
 
 function start_mysql() {    
     # start mysql
+            
+    cmd="sed -i -e 's/^server-id.*$/server-id=${ZOO_MY_ID:-1}/' /etc/my.cnf"
+    eval $cmd
     if [ -z "$(ls -A /var/lib/mysql)" ]; then
         echo "start modify mysql password ..."
         cmd="sed -i -e  '2a skip-grant-tables' /etc/my.cnf"
-        eval $cmd
-        cmd="sed -i -e  '2a server-id=${ZOO_MY_ID:-1}' /etc/my.cnf"
         eval $cmd
         /usr/sbin/mysqld --user=mysql --datadir=/var/lib/mysql --initialize 1>>/tmp/start.log 2>&1
         service mysqld start

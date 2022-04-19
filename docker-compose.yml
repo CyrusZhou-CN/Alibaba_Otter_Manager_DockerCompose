@@ -1,7 +1,7 @@
 version: "3"
 services:
   otter_manager:
-    image: ${DOCKER_REGISTRY-}otter_manager
+    image: lsqtzj/otter_manager
     build:
       context: .
       dockerfile: otter_manager/Dockerfile
@@ -20,13 +20,15 @@ services:
       ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
+    volumes:
+      - ./test.sql:/docker-entrypoint-initdb.d/test.sql
     extra_hosts:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      
       - "node02:10.21.0.12"
 
   node01:
-    image: ${DOCKER_REGISTRY-}otter_node
+    image: lsqtzj/otter_node
     build:
       context: .
       dockerfile: otter_node/Dockerfile
@@ -43,6 +45,8 @@ services:
       ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 2
       ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
+    volumes:
+      - ./test.sql:/docker-entrypoint-initdb.d/test.sql
     extra_hosts:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      
@@ -51,7 +55,7 @@ services:
       - otter_manager
 
   node02:
-    image: ${DOCKER_REGISTRY-}otter_node
+    image: lsqtzj/otter_node
     build:
       context: .
       dockerfile: otter_node/Dockerfile
@@ -68,6 +72,8 @@ services:
       ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
       ZOO_MY_ID: 3
       ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
+    volumes:
+      - ./test.sql:/docker-entrypoint-initdb.d/test.sql
     extra_hosts:
       - "otter_manager:10.21.0.10"
       - "node01:10.21.0.11"      

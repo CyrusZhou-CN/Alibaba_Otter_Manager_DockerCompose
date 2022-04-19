@@ -46,7 +46,11 @@ ZOO_AUTOPURGE_SNAPRETAINCOUNT=3
 ZOO_MAX_CLIENT_CNXNS=60 
 ZOO_STANDALONE_ENABLED=true 
 ZOO_ADMINSERVER_ENABLED=true
-
+function get_host_ip()
+{
+    IP=`host $1 | grep -Eo "[0-9]+.[0-9]+.[0-9]+.[0-9]+"`
+    echo "$IP"
+}
 # waitterm
 #   wait TERM/INT signal.
 #   see: http://veithen.github.io/2014/11/16/sigterm-propagation.html
@@ -256,7 +260,29 @@ function start_mysql() {
         MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql --connect-expired-password -h127.0.0.1 -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASSWORD}';flush privileges;"
         MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot -e "source $TEMP_FILE" 1>>/tmp/start.log 2>&1
         checkStart "mysql" "echo 'show status' | MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -s -P3306 -uroot | grep -c Uptime" 120
-        # otter 基础配置        
+        # otter 基础配置
+
+        if [ -n "${ZOO_CLUSTER}" ] ; then
+            seri=2
+            tmp_CLUSTER=${ZOO_CLUSTER//','/' '}
+
+            for server in $tmp_CLUSTER; do
+                server=$(echo $server | cut -d ':' -f1)
+                HOSTIP=$(get_host_ip $server)
+                echo "replace into NODE(ID,NAME,IP,PORT,DESCRIPTION,PARAMETERS,GMT_CREATE,GMT_MODIFIED) values("${seri}",'"$server"','"$HOSTIP"',2088,NULL,'{\"downloadPort\":2089,\"mbeanPort\":2090,\"useExternalIp\":false,\"zkCluster\":{\"clusterName\":\"default\",\"id\":1}}', now(), now());">>/home/admin/bin/ddl.sql
+                let seri=$seri+1
+            done
+            tmp_CLUSTER=${ZOO_CLUSTER//','/'","'}
+            echo "replace into AUTOKEEPER_CLUSTER(ID,CLUSTER_NAME,SERVER_LIST,DESCRIPTION,GMT_CREATE,GMT_MODIFIED) values(1,'default','[\"${tmp_CLUSTER}\"]',NULL,now(),now());">>/home/admin/bin/ddl.sql
+        fi
+        chown admin: -R /docker-entrypoint-initdb.d
+        for f in /docker-entrypoint-initdb.d/*; do
+			case "$f" in
+				*.sh)  echo "[Entrypoint] running $f"; . "$f" ;;
+				*.sql) echo "[Entrypoint] running $f";eval "MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot -e 'source $f' 1>>/tmp/start.log 2>&1";;
+				*)     echo "[Entrypoint] ignoring $f" ;;
+			esac
+		done
         cmd="MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot $MYSQL_DATABASE -e 'source /home/admin/bin/ddl.sql' 1>>/tmp/start.log 2>&1"
         # cmd="sed -i -e 's/#OTTER_MY_ZK#/127.0.0.1:2181/' /home/admin/bin/ddl.sql"
         # eval $cmd

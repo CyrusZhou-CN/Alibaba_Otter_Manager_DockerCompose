@@ -18,3 +18,13 @@ osbase 基础镜像，系统软件更新 </br>
 zookeeper -> 3.7.0</br>
 mysql -> 5.7.35 #  Ver 14.14 Distrib 5.7.35, for Linux (x86_64) using  EditLine wrapper</br>
 修复宿主机无法访问镜像mysql问题</br>
+# 2022年4月19日更新
+mysql 初始化数据库功能修复
+
+```
+...
+volumes:
+      - ./test.sql:/docker-entrypoint-initdb.d/test.sql
+...
+```
+用ZOO_CLUSTER参数自动生成otter默认配置

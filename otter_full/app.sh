@@ -348,8 +348,8 @@ start_zookeeper
 if [ "${RUN_MODE}" == "ALL" ]; then
     echo -e "\033[32m ==> START RUN_MODE: "${RUN_MODE}"... \033[0m"
     start_manager
-    start_node    
     echo "you can visit manager link : http://$host:8080/ , just have fun !"
+    start_node    
 fi
 
 if [ "${RUN_MODE}" == "NODE" ]; then

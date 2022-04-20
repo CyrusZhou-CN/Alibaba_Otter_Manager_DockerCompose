@@ -1,37 +1,10 @@
 version: "3"
 services:
-  otter_manager:
-    image: lsqtzj/otter_manager
-    build:
-      context: .
-      dockerfile: otter_manager/Dockerfile
-    restart: always
-    container_name: otter_manager
-    hostname: otter_manager
-    networks:
-      otter:
-        ipv4_address: 10.21.0.10
-    ports:
-      - 8080:8080 
-      - 8018:8018 #zookeeper ui
-      - 33061:3306 
-    environment:
-      TZ: Europe/Rome #Asia/Shanghai 时区
-      ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
-      ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
-    volumes:
-      - ./test.sql:/docker-entrypoint-initdb.d/test.sql
-    extra_hosts:
-      - "otter_manager:10.21.0.10"
-      - "node01:10.21.0.11"      
-      - "node02:10.21.0.12"
-
   node01:
-    image: lsqtzj/otter_node
+    image: lsqtzj/otter_full
     build:
       context: .
-      dockerfile: otter_node/Dockerfile
+      dockerfile: otter_full/Dockerfile
     restart: always
     container_name: node01
     hostname: node01
@@ -39,26 +12,28 @@ services:
       otter:
         ipv4_address: 10.21.0.11
     ports:
-      - 33062:3306 
+      - 8080:8080 
+      - 8018:8018 #zookeeper ui
+      - 33061:3306 
     environment:
       TZ: Europe/Rome #Asia/Shanghai 时区
-      ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
-      ZOO_MY_ID: 2
-      ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
+      ZOO_CLUSTER: node01:2181,node02:2181,node03:2181
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=node01:2888:3888 server.2=node02:2888:3888 server.3=node03:2888:3888
+      RUN_MODE: ALL # ALL,MANAGER,NODE
+      MANAGER_ADD:  10.21.0.11
     volumes:
       - ./test.sql:/docker-entrypoint-initdb.d/test.sql
     extra_hosts:
-      - "otter_manager:10.21.0.10"
-      - "node01:10.21.0.11"      
-      - "node02:10.21.0.12" 
-    depends_on:
-      - otter_manager
+      - "node01:10.21.0.11"
+      - "node02:10.21.0.12"      
+      - "node03:10.21.0.13"
 
   node02:
-    image: lsqtzj/otter_node
+    image: lsqtzj/otter_full
     build:
       context: .
-      dockerfile: otter_node/Dockerfile
+      dockerfile: otter_full/Dockerfile
     restart: always
     container_name: node02
     hostname: node02
@@ -66,18 +41,49 @@ services:
       otter:
         ipv4_address: 10.21.0.12
     ports:
-      - 33063:3306 
+      - 33062:3306 
     environment:
       TZ: Europe/Rome #Asia/Shanghai 时区
-      ZOO_CLUSTER: otter_manager:2181,node01:2181,node02:2181
-      ZOO_MY_ID: 3
-      ZOO_SERVERS: server.1=otter_manager:2888:3888 server.2=node01:2888:3888 server.3=node02:2888:3888
+      ZOO_CLUSTER: node01:2181,node02:2181,node03:2181
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=node01:2888:3888 server.2=node02:2888:3888 server.3=node03:2888:3888
+      RUN_MODE: NODE
+      MANAGER_ADD:  10.21.0.11
     volumes:
       - ./test.sql:/docker-entrypoint-initdb.d/test.sql
     extra_hosts:
-      - "otter_manager:10.21.0.10"
-      - "node01:10.21.0.11"      
-      - "node02:10.21.0.12"
+      - "node01:10.21.0.11"
+      - "node02:10.21.0.12"      
+      - "node03:10.21.0.13" 
+    depends_on:
+      - node01
+
+  node03:
+    image: lsqtzj/otter_full
+    build:
+      context: .
+      dockerfile: otter_full/Dockerfile
+    restart: always
+    container_name: node03
+    hostname: node03
+    networks:
+      otter:
+        ipv4_address: 10.21.0.13
+    ports:
+      - 33063:3306 
+    environment:
+      TZ: Europe/Rome #Asia/Shanghai 时区
+      ZOO_CLUSTER: node01:2181,node02:2181,node03:2181
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=node01:2888:3888 server.2=node02:2888:3888 server.3=node03:2888:3888
+      RUN_MODE: NODE
+      MANAGER_ADD:  10.21.0.11
+    volumes:
+      - ./test.sql:/docker-entrypoint-initdb.d/test.sql
+    extra_hosts:
+      - "node01:10.21.0.11"
+      - "node02:10.21.0.12"      
+      - "node03:10.21.0.13"
     depends_on:
       - node01
 

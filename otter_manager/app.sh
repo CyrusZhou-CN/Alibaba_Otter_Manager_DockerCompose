@@ -263,7 +263,7 @@ function start_mysql() {
         # otter 基础配置
 
         if [ -n "${ZOO_CLUSTER}" ] ; then
-            seri=2
+            seri=1
             tmp_CLUSTER=${ZOO_CLUSTER//','/' '}
 
             for server in $tmp_CLUSTER; do

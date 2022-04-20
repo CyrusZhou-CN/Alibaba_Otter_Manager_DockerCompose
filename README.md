@@ -28,3 +28,12 @@ volumes:
 ...
 ```
 用ZOO_CLUSTER参数自动生成otter默认配置
+# Manager Node docker合并
+添加 RUN_MODE 参数
+```
+RUN_MODE: ALL 
+参数说明：
+ALL：      Manager 加 Node 模式
+MANAGER：  Manager 模式
+NODE：     Node 模式
+```

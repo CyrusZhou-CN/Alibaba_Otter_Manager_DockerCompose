@@ -252,7 +252,7 @@ function start_mysql() {
         checkStart "mysql" "echo 'show status' | MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysql -s -P3306 -uroot | grep -c Uptime" 120
         # otter 基础配置
         if [ -n "${ZOO_CLUSTER}" ] ; then
-            seri=2
+            seri=1
             tmp_CLUSTER=${ZOO_CLUSTER//','/' '}
             for server in $tmp_CLUSTER; do                
                 server=$(echo $server | cut -d ':' -f1)
